@@ -1,0 +1,125 @@
+.app {
+  display: flex;
+  height: 100vh;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #1e1e1e;
+  color: #ffffff;
+  position: relative;
+}
+
+.sidebar {
+  width: 250px;
+  background: #252526;
+  padding: 20px;
+  border-right: 1px solid #333;
+  overflow-y: auto;
+}
+
+.sidebar h2 {
+  margin: 0 0 20px;
+  font-size: 18px;
+  color: #569cd6;
+}
+
+.device {
+  padding: 10px;
+  margin-bottom: 10px;
+  background: #3c3c3c;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s;
+}
+
+.device:hover {
+  background: #4e4e4e;
+}
+
+.device img {
+  width: 32px;
+  height: 32px;
+  margin-right: 10px;
+}
+
+.device p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.main-panel {
+  flex: 1;
+  padding: 20px;
+  background: #1e1e1e;
+  overflow-y: auto;
+}
+
+.main-panel h1 {
+  margin: 0 0 20px;
+  font-size: 24px;
+  color: #d4d4d4;
+}
+
+.file-list {
+  margin-top: 20px;
+}
+
+.file-item {
+  padding: 10px;
+  background: #3c3c3c;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.device.drop-target {
+  background: #569cd6;
+}
+
+.notification-container {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notification {
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  animation: slideIn 0.3s ease-in, fadeOut 5s ease-out forwards;
+}
+
+.notification.success {
+  background: #2e7d32;
+}
+
+.notification.error {
+  background: #d32f2f;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    display: none;
+  }
+}
