@@ -1,0 +1,25 @@
+{
+  "name": "intra-share",
+  "version": "1.0.0",
+  "main": "main.js",
+  "homepage": "./",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "electron": "electron .",
+    "start:electron": "npm run build && electron .",
+    "package": "electron-packager . intra-share --platform=win32 --arch=x64 --out=dist --overwrite"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1",
+    "electron": "^25.0.0",
+    "mdns-js": "^1.0.5",
+    "winston": "^3.11.0",
+    "winston-daily-rotate-file": "^4.7.1"
+  },
+  "devDependencies": {
+    "electron-packager": "^17.1.1"
+  }
+}
