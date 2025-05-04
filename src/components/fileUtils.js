@@ -4,6 +4,17 @@ const xxhash = require('xxhash');
 const axios = require('axios');
 const { i18n } = require('./i18n');
 
+// 내부망 IP 범위 확인 함수
+function isInternalIp(host) {
+  const internalRanges = [
+    /^192\.168\.\d{1,3}\.\d{1,3}$/, // 192.168.x.x
+    /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/, // 10.x.x.x
+    /^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/, // 172.16.x.x ~ 172.31.x.x
+    /^localhost$/, // localhost 허용
+  ];
+  return internalRanges.some((range) => range.test(host));
+}
+
 function encryptBuffer(buffer, key) {
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(key, 'hex'), iv);
@@ -22,9 +33,16 @@ async function sendFile(device, file, settings, networkSpeed, setTransferProgres
     return;
   }
 
+  // 내부망 IP인지 확인
+  if (!isInternalIp(device.host)) {
+    setNotifications((prev) => [...prev, { message: 'External network access is not allowed', type: 'error', id: Date.now() }]);
+    return;
+  }
+
   let fileBuffer = await new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
+    reader.readAsArrayBuffer(file);
     reader.readAsArrayBuffer(file);
   });
 
@@ -84,6 +102,7 @@ async function sendFile(device, file, settings, networkSpeed, setTransferProgres
               'X-Encrypted-Request': 'true',
             },
             httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false }),
+            timeout: 5000, // 타임아웃 설정
           }
         );
 
