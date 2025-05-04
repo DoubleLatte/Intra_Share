@@ -7,6 +7,17 @@ const { organizeFile, encryptPath, calculateFileHash, decompressFile, decryptBuf
 const { getSettings, updateTransferHistory } = require('./settingsManager');
 const { log } = require('./notificationManager');
 
+// 내부망 IP 범위 확인 함수
+function isInternalIp(host) {
+  const internalRanges = [
+    /^192\.168\.\d{1,3}\.\d{1,3}$/,
+    /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/,
+    /^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/,
+    /^localhost$/,
+  ];
+  return internalRanges.some((range) => range.test(host));
+}
+
 const port = 3000;
 const tokens = new Map();
 let mainWindow = null;
@@ -44,13 +55,23 @@ function startServer(window) {
 }
 
 function handleRequest(req, res) {
+  // 요청이 내부망에서 온 것인지 확인
+  const remoteAddress = req.socket.remoteAddress.replace('::ffff:', '');
+  if (!isInternalIp(remoteAddress)) {
+    res.writeHead(403);
+    res.end('External network access is not allowed');
+    log(`External access attempt from ${remoteAddress}`, 'warn');
+    mainWindow.webContents.send('notification', { message: 'External network access is not allowed', type: 'error' });
+    return;
+  }
+
   if (req.method === 'POST' && req.url === '/upload') {
     const sessionId = req.headers['session-id'];
     const sessionCache = new NodeCache({ stdTTL: 3600 });
     if (!sessionId || !sessionCache.get(sessionId)) {
       res.writeHead(401);
       res.end('Invalid session');
-      log(`Invalid session: ${req.socket.remoteAddress}`, 'warn');
+      log(`Invalid session: ${remoteAddress}`, 'warn');
       mainWindow.webContents.send('notification', { message: 'Invalid session', type: 'error' });
       return;
     }
@@ -70,7 +91,7 @@ function handleRequest(req, res) {
     } else {
       res.writeHead(401);
       res.end('Missing user authentication');
-      log(`Missing user authentication: ${req.socket.remoteAddress}`, 'warn');
+      log(`Missing user authentication: ${remoteAddress}`, 'warn');
       mainWindow.webContents.send('notification', { message: 'Missing user authentication', type: 'error' });
       return;
     }
@@ -79,7 +100,7 @@ function handleRequest(req, res) {
     if (!token || !tokens.has(token)) {
       res.writeHead(401);
       res.end('Unauthorized');
-      log(`Unauthorized access attempt: ${req.socket.remoteAddress}`, 'warn');
+      log(`Unauthorized access attempt: ${remoteAddress}`, 'warn');
       mainWindow.webContents.send('notification', { message: 'Unauthorized access attempt', type: 'error' });
       return;
     }
@@ -89,7 +110,7 @@ function handleRequest(req, res) {
     if (!fileName || typeof fileName !== 'string' || fileName.length > 255 || fileName !== sanitizedFileName) {
       res.writeHead(400);
       res.end('Invalid file name');
-      log(`Invalid file name from ${req.socket.remoteAddress}: ${fileName}`, 'warn');
+      log(`Invalid file name from ${remoteAddress}: ${fileName}`, 'warn');
       mainWindow.webContents.send('notification', { message: 'Invalid file name', type: 'error' });
       return;
     }
@@ -99,7 +120,7 @@ function handleRequest(req, res) {
     if (fileSize > settings.maxFileSize) {
       res.writeHead(413);
       res.end(`File size exceeds ${settings.maxFileSize / (1024 * 1024 * 1024)}GB limit`);
-      log(`File size exceeds limit from ${req.socket.remoteAddress}: ${fileSize} bytes`, 'warn');
+      log(`File size exceeds limit from ${remoteAddress}: ${fileSize} bytes`, 'warn');
       mainWindow.webContents.send('notification', { message: `File size exceeds ${settings.maxFileSize / (1024 * 1024 * 1024)}GB limit`, type: 'error' });
       return;
     }
@@ -109,7 +130,7 @@ function handleRequest(req, res) {
     if (isNaN(chunkIndex) || isNaN(totalChunks) || chunkIndex < 0 || totalChunks <= 0) {
       res.writeHead(400);
       res.end('Invalid chunk data');
-      log(`Invalid chunk data from ${req.socket.remoteAddress}`, 'warn');
+      log(`Invalid chunk data from ${remoteAddress}`, 'warn');
       mainWindow.webContents.send('notification', { message: 'Invalid chunk data', type: 'error' });
       return;
     }
@@ -118,7 +139,7 @@ function handleRequest(req, res) {
     if (!encryptionKey) {
       res.writeHead(400);
       res.end('Missing encryption key');
-      log(`Missing encryption key from ${req.socket.remoteAddress}`, 'warn');
+      log(`Missing encryption key from ${remoteAddress}`, 'warn');
       mainWindow.webContents.send('notification', { message: 'Missing encryption key', type: 'error' });
       return;
     }
@@ -127,7 +148,7 @@ function handleRequest(req, res) {
     if (!fileHash) {
       res.writeHead(400);
       res.end('Missing file hash');
-      log(`Missing file hash from ${req.socket.remoteAddress}`, 'warn');
+      log(`Missing file hash from ${remoteAddress}`, 'warn');
       mainWindow.webContents.send('notification', { message: 'Missing file hash', type: 'error' });
       return;
     }
@@ -143,7 +164,7 @@ function handleRequest(req, res) {
         fileStreams.set(fileId, {
           path: filePath,
           name: sanitizedFileName,
-          remoteAddress: req.socket.remoteAddress,
+          remoteAddress: remoteAddress,
           chunks: [],
           receivedChunks: 0,
           totalChunks,
@@ -193,7 +214,7 @@ function handleRequest(req, res) {
           fileStreams.delete(fileId);
           res.writeHead(200, { 'Content-Type': 'text/plain' });
           res.end('File received');
-          log(`File auto-received: ${sanitizedFileName} from ${req.socket.remoteAddress}`, 'info');
+          log(`File auto-received: ${sanitizedFileName} from ${remoteAddress}`, 'info');
           mainWindow.webContents.send('file-received', { path: finalPath, name: sanitizedFileName });
           updateTransferHistory('received', { name: sanitizedFileName, path: finalPath, timestamp: new Date().toISOString() });
         } else {
@@ -201,7 +222,7 @@ function handleRequest(req, res) {
           fileStreams.delete(fileId);
           res.writeHead(200, { 'Content-Type': 'text/plain' });
           res.end('File pending approval');
-          log(`File pending approval: ${sanitizedFileName} from ${req.socket.remoteAddress}`, 'info');
+          log(`File pending approval: ${sanitizedFileName} from ${remoteAddress}`, 'info');
           mainWindow.webContents.send('file-pending', { fileId, name: sanitizedFileName });
         }
       } else {
@@ -213,7 +234,7 @@ function handleRequest(req, res) {
     req.on('error', (err) => {
       res.writeHead(500);
       res.end('Server error');
-      log(`Error receiving file from ${req.socket.remoteAddress}: ${err.message}`, 'error');
+      log(`Error receiving file from ${remoteAddress}: ${err.message}`, 'error');
       mainWindow.webContents.send('notification', { message: `Failed to receive file: ${err.message}`, type: 'error' });
       fileStreams.delete(fileId);
     });
