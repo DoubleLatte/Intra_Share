@@ -10,15 +10,18 @@
     "start:electron": "npm run build && electron .",
     "package": "electron-packager . intra-share --platform=win32 --arch=x64 --out=dist --overwrite"
   },
+  {
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1",
-    "electron": "^25.0.0",
+    "axios": "^1.7.7",
+    "electron-store": "^8.2.0",
     "mdns-js": "^1.0.5",
-    "winston": "^3.11.0",
-    "winston-daily-rotate-file": "^4.7.1"
-  },
+    "node-cache": "^5.1.2",
+    "pako": "^2.1.0",
+    "react": "^18.3.1",
+    "sound-play": "^1.2.2",
+    "winston": "^3.14.2",
+    "xxhash": "^0.3.0"
+  }
   "devDependencies": {
     "electron-packager": "^17.1.1"
   }
