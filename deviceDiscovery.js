@@ -2,6 +2,17 @@ const mdns = require('mdns-js');
 const { getSettings } = require('./settingsManager');
 const { log } = require('./notificationManager');
 
+// 내부망 IP 범위 확인 함수 (fileUtils.js와 동일)
+function isInternalIp(host) {
+  const internalRanges = [
+    /^192\.168\.\d{1,3}\.\d{1,3}$/,
+    /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/,
+    /^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/,
+    /^localhost$/,
+  ];
+  return internalRanges.some((range) => range.test(host));
+}
+
 const port = 3000;
 const deviceStatus = new Map();
 
@@ -27,6 +38,14 @@ function discoverDevices(mainWindow) {
         port: service.port,
         token: service.txt?.token || '',
       };
+
+      // 내부망 IP인지 확인
+      if (!isInternalIp(device.host)) {
+        log(`External device detected: ${device.host}, ignoring`, 'warn');
+        mainWindow.webContents.send('notification', { message: 'External device access is not allowed', type: 'error' });
+        return;
+      }
+
       deviceStatus.set(service.name, { host: device.host, port: device.port });
       checkDeviceStatus(device.host, device.port).then((isOnline) => {
         mainWindow.webContents.send('device-found', {
@@ -65,7 +84,13 @@ function discoverDevices(mainWindow) {
 
 function checkDeviceStatus(host, port) {
   return new Promise((resolve) => {
-    const req = https.request(
+    // 내부망 IP인지 확인
+    if (!isInternalIp(host)) {
+      resolve(false);
+      return;
+    }
+
+    const req = require('https').request(
       { host, port, path: '/ping', method: 'GET', rejectUnauthorized: false },
       (res) => resolve(res.statusCode === 200)
     );
