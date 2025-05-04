@@ -7,10 +7,10 @@ const { i18n } = require('./i18n');
 // 내부망 IP 범위 확인 함수
 function isInternalIp(host) {
   const internalRanges = [
-    /^192\.168\.\d{1,3}\.\d{1,3}$/, // 192.168.x.x
-    /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/, // 10.x.x.x
-    /^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/, // 172.16.x.x ~ 172.31.x.x
-    /^localhost$/, // localhost 허용
+    /^192\.168\.\d{1,3}\.\d{1,3}$/,
+    /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/,
+    /^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/,
+    /^localhost$/,
   ];
   return internalRanges.some((range) => range.test(host));
 }
@@ -22,7 +22,8 @@ function encryptBuffer(buffer, key) {
   return Buffer.concat([iv, encrypted]);
 }
 
-async function sendFile(device, file, settings, networkSpeed, setTransferProgress, setNotifications) {
+// 네트워크 속도 없이 파일 전송
+async function sendFile(device, file, settings, setTransferProgress, setNotifications) {
   if (!settings.isAuthenticated) {
     setNotifications((prev) => [...prev, { message: i18n.t('unauthorized'), type: 'error', id: Date.now() }]);
     return;
@@ -52,7 +53,7 @@ async function sendFile(device, file, settings, networkSpeed, setTransferProgres
   const encryptedBuffer = encryptBuffer(Buffer.from(compressedBuffer), encryptionKey);
 
   const fileSize = encryptedBuffer.length;
-  const CHUNK_SIZE = getChunkSize(fileSize, networkSpeed, settings);
+  const CHUNK_SIZE = getChunkSize(fileSize, settings); // 네트워크 속도 제거
   const totalChunks = Math.ceil(fileSize / CHUNK_SIZE);
   const transferId = `${file.name}-${Date.now()}`;
   const cancelTransferRef = new Map();
@@ -102,7 +103,7 @@ async function sendFile(device, file, settings, networkSpeed, setTransferProgres
               'X-Encrypted-Request': 'true',
             },
             httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false }),
-            timeout: 5000, // 타임아웃 설정
+            timeout: 5000,
           }
         );
 
@@ -150,15 +151,15 @@ async function sendFile(device, file, settings, networkSpeed, setTransferProgres
   sendChunks();
 }
 
-function getChunkSize(fileSize, networkSpeed, settings) {
+// 네트워크 속도 제거, 파일 크기 기반으로 고정된 청크 크기 계산
+function getChunkSize(fileSize, settings) {
   let baseChunkSize;
-  if (fileSize < 1024 * 1024) baseChunkSize = 64 * 1024;
-  else if (fileSize < 100 * 1024 * 1024) baseChunkSize = 512 * 1024;
-  else if (fileSize < 1024 * 1024 * 1024) baseChunkSize = 1024 * 1024;
-  else baseChunkSize = 5 * 1024 * 1024;
+  if (fileSize < 1024 * 1024) baseChunkSize = 64 * 1024; // 1MB 미만: 64KB
+  else if (fileSize < 100 * 1024 * 1024) baseChunkSize = 512 * 1024; // 100MB 미만: 512KB
+  else if (fileSize < 1024 * 1024 * 1024) baseChunkSize = 1024 * 1024; // 1GB 미만: 1MB
+  else baseChunkSize = 5 * 1024 * 1024; // 1GB 이상: 5MB
 
-  if (networkSpeed < 1) return Math.max(baseChunkSize / 2, 32 * 1024);
-  if (networkSpeed > 50) return Math.min(baseChunkSize * 2, 10 * 1024 * 1024);
+  // 대역폭 제한이 설정된 경우 적용
   if (settings.bandwidthLimit > 0) return Math.min(baseChunkSize, settings.bandwidthLimit * 1024);
   return baseChunkSize;
 }
