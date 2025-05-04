@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { i18n } from '../utils/i18n';
 import useSettings from '../hooks/useSettings';
-import useNetwork from '../hooks/useNetwork';
 import { sendFile } from '../utils/fileUtils';
 
 function Devices({ devices, setFiles, setNotifications, setTransferProgress }) {
   const { settings } = useSettings();
-  const { networkSpeed } = useNetwork();
   const [draggedFiles, setDraggedFiles] = useState([]);
 
   const handleDrop = (device) => async (e) => {
@@ -16,7 +14,8 @@ function Devices({ devices, setFiles, setNotifications, setTransferProgress }) {
     const droppedFiles = Array.from(e.dataTransfer.files);
 
     for (const file of droppedFiles) {
-      sendFile(device, file, settings, networkSpeed, setTransferProgress, setNotifications);
+      // 네트워크 속도 없이 파일 전송
+      sendFile(device, file, settings, setTransferProgress, setNotifications);
     }
   };
 
