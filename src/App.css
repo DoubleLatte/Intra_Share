@@ -1,174 +1,77 @@
-.app {
+:root {
+  --background-color: #f5f5f5;
+  --text-color: #333333;
+  --container-bg: #ffffff;
+  --primary-color: #007bff;
+  --opacity: 1;
+  --filter: brightness(1);
+  --button-border-radius: 4px;
+}
+
+.app-container {
+  font-family: Arial, sans-serif;
+  background-color: var(--background-color);
   padding: 20px;
-  min-height: 100vh;
+  color: var(--text-color);
+  opacity: var(--opacity);
+  filter: var(--filter);
 }
 
-.app-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.settings-toggle {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-}
-
-.auth-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  margin-top: 100px;
-}
-
-.auth-input {
-  padding: 8px;
-  width: 200px;
-}
-
-.auth-btn {
-  padding: 8px 16px;
-  cursor: pointer;
-}
-
-.auth-btn.rounded {
+.devices, .files, .notifications, .transfer-progress, .settings-panel {
+  background: var(--container-bg);
   border-radius: 8px;
-}
-
-.auth-btn.square {
-  border-radius: 0;
-}
-
-.devices {
-  margin-top: 20px;
+  padding: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .device {
   padding: 10px;
-  border: 1px solid #ccc;
-  margin-bottom: 5px;
+  margin: 5px 0;
+  background: var(--container-bg);
+  border-radius: 4px;
   cursor: pointer;
 }
 
 .device.drop-target {
-  background-color: #e0e0e0;
+  background: #e0f7fa;
+  border: 2px dashed #00bcd4;
 }
 
-.files {
-  margin-top: 20px;
-}
-
-.file {
-  padding: 10px;
-  border: 1px solid #ccc;
-  margin-bottom: 5px;
-}
-
-.file button {
-  margin-left: 10px;
-  padding: 5px 10px;
-}
-
-.notifications {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.notification {
-  padding: 10px;
-  border-radius: 5px;
+button {
+  background-color: var(--primary-color);
   color: white;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.notification.success {
-  background-color: #28a745;
-}
-
-.notification.error {
-  background-color: #dc3545;
-}
-
-.notification.info {
-  background-color: #007bff;
-}
-
-.notification button {
-  background: none;
+  padding: 8px 16px;
   border: none;
-  color: white;
+  border-radius: var(--button-border-radius);
   cursor: pointer;
 }
 
-.transfer-progress {
-  margin-top: 20px;
+button:hover {
+  background-color: color-mix(in srgb, var(--primary-color) 80%, black);
 }
 
-.transfer-progress div {
-  padding: 10px;
-  border: 1px solid #ccc;
-  margin-bottom: 5px;
+/* SettingsPanel 내부 스타일도 테마 반영 */
+.settings-panel .text-gray-600 {
+  color: var(--text-color);
 }
 
-.transfer-progress button {
-  margin-left: 10px;
-  padding: 5px 10px;
+.settings-panel .text-gray-700 {
+  color: var(--text-color);
 }
 
-.settings-panel {
-  margin-top: 20px;
-  padding: 20px;
-  border: 1px solid #ccc;
-  background-color: #f9f9f9;
+.settings-panel .bg-gray-100 {
+  background-color: var(--background-color);
 }
 
-.settings-panel label {
-  display: block;
-  margin-top: 10px;
+.settings-panel .bg-white {
+  background-color: var(--container-bg);
 }
 
-.settings-panel input,
-.settings-panel select {
-  margin-top: 5px;
-  padding: 5px;
-  width: 200px;
+.settings-panel .bg-blue-500 {
+  background-color: var(--primary-color);
 }
 
-.settings-panel button {
-  margin-top: 10px;
-  padding: 5px 10px;
-}
-
-.transfer-history {
-  margin-top: 20px;
-}
-
-.transfer-history button {
-  margin-bottom: 10px;
-  padding: 5px 10px;
-}
-
-.dark {
-  background-color: #333;
-  color: #fff;
-}
-
-.light {
-  background-color: #fff;
-  color: #333;
-}
-
-.highContrast {
-  background-color: #000;
-  color: #fff;
-  border: 1px solid #fff;
+.settings-panel .hover\:bg-gray-200:hover {
+  background-color: color-mix(in srgb, var(--container-bg) 90%, black);
 }
