@@ -1,0 +1,77 @@
+:root {
+  --background-color: #f5f5f5;
+  --text-color: #333333;
+  --container-bg: #ffffff;
+  --primary-color: #007bff;
+  --opacity: 1;
+  --filter: brightness(1);
+  --button-border-radius: 4px;
+}
+
+.app-container {
+  font-family: Arial, sans-serif;
+  background-color: var(--background-color);
+  padding: 20px;
+  color: var(--text-color);
+  opacity: var(--opacity);
+  filter: var(--filter);
+}
+
+.devices, .files, .notifications, .transfer-progress, .settings-panel {
+  background: var(--container-bg);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.device {
+  padding: 10px;
+  margin: 5px 0;
+  background: var(--container-bg);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.device.drop-target {
+  background: #e0f7fa;
+  border: 2px dashed #00bcd4;
+}
+
+button {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--button-border-radius);
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: color-mix(in srgb, var(--primary-color) 80%, black);
+}
+
+/* SettingsPanel 내부 스타일도 테마 반영 */
+.settings-panel .text-gray-600 {
+  color: var(--text-color);
+}
+
+.settings-panel .text-gray-700 {
+  color: var(--text-color);
+}
+
+.settings-panel .bg-gray-100 {
+  background-color: var(--background-color);
+}
+
+.settings-panel .bg-white {
+  background-color: var(--container-bg);
+}
+
+.settings-panel .bg-blue-500 {
+  background-color: var(--primary-color);
+}
+
+.settings-panel .hover\:bg-gray-200:hover {
+  background-color: color-mix(in srgb, var(--container-bg) 90%, black);
+}
